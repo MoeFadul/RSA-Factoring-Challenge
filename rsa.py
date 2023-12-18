@@ -1,96 +1,72 @@
 #!/usr/bin/python3
 
+
+import sys
 import random
-import math
-
-#select 2 large prime numbers
-def generate_p_and_q():
-	
-	#Calculating 1 to 100 prime numbers 
-
-	numbs = [i for i in range(2,101)]
-
-	for n in range(2,101):
-		for i in range(2,math.ceil(n/2)+1):
-			if n % i == 0:
-				numbs.remove(n)
-				break
-			else:
-				continue
-
-	#Selecting any 2 prime numbers randomly
-
-	p = random.choice(numbs)
-	numbs.remove(p)
-	q = random.choice(numbs)
-
-	return p, q
-
-p,q =  generate_p_and_q()
-
-print(f'[+] p = {p} and q = {q}')
-
-n = p * q
-
-phi = (p - 1) * (q - 1)
+import time
 
 
-print(f'[+] n = {n} and euler totient = {phi}')
+def is_prime(num, k=20):
+    '''
+    '''
+    if num == 2 or num == 3:
+        return True
+    if num < 2 or num % 2 == 0:
+        return False
 
 
-#Calculating e -> gcd(e,phi) = 1 and 1 < e <phi.
-def generate_e(phi):
-	possible_e_values = []
+    d = num - 1
+    r = 0
+    while d % 2 == 0:
+        d //= 2
+        r += 1
 
-	for i in range(2,phi):
-		if math.gcd(i,phi) == 1: 
-			e=i
-			possible_e_values.append(e)
 
-	# print(possible_e_values)
+    for _ in range(k):
+        a = random.randint(2, num - 2)
+        x = pow(a, d, num)
+        if x == 1 or x == num - 1:
+            continue
+        for _ in range(r - 1):
+            x = pow(x, 2, num)
+            if x == num - 1:
+                break
+        else:
+            return False
 
-	return random.choice(possible_e_values)
 
-e = generate_e(phi)
+    return True
 
-print(f'[+] e = {e}')
 
-def generate_d(e,phi):
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: rsa <file>")
+        exit()
 
-	# d_list = [] 
 
-	for i in range(2,phi):
+    input_file = sys.argv[1]
 
-		if (i*e) % phi == 1: #  ed mod(phi) = 1
-			d = i # As every unique public key have only one unique private key.
-			# d_list.append(d)
-			break
 
-	# print(d_list)
-	return d
+    try:
+        with open(input_file, 'r') as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        print("File not found")
+        exit()
 
-d = generate_d(e,phi)
 
-print(f'[+] d = {d}')
+    start_time = time.time()
 
-# Message should be less than n (msg < n)
 
-msg = random.randint(1,n)
+    num = int(lines[0].strip())
 
-print(f'[+] msg : {msg}')
 
-def encrypt(msg,e,n): #(msg^e) mod n
-	c = pow(msg,e,n)
-	return c
+    for i in range(2, num//2):
+        if num % i == 0 and is_prime(i) and is_prime(num//i):
+            print(f"{num}={i}*{num//i}")
+            break
 
-e_msg = encrypt(msg,e,n)
 
-print(f'[+] Encrypted msg : {e_msg}')
-
-def decrypt(msg,d,n): #(msg^d) mod n
-	p = pow(msg,d,n)
-	return p
-
-d_msg = decrypt(e_msg,d,n)
-
-print(f'[+] Decrypted msg : {d_msg}')
+        if time.time() - start_time > 5:
+            print("Time limit exceeded")
+            exit()
